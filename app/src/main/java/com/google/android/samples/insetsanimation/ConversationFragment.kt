@@ -16,14 +16,24 @@
 
 package com.google.android.samples.insetsanimation
 
+import android.animation.Animator
+import android.animation.ValueAnimator
+import android.content.Context
+import android.graphics.Rect
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
+import android.widget.LinearLayout.LayoutParams
+import androidx.activity.OnBackPressedCallback
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.samples.insetsanimation.databinding.FragmentConversationBinding
 
 /**
@@ -31,8 +41,62 @@ import com.google.android.samples.insetsanimation.databinding.FragmentConversati
  * the sample works.
  */
 class ConversationFragment : Fragment() {
+    private val TAG = "FragmentTag"
     private var _binding: FragmentConversationBinding? = null
     private val binding: FragmentConversationBinding get() = _binding!!
+
+    //patch
+    private lateinit var inputMethodManager: InputMethodManager
+
+    private val translateInsetsCallback2 by lazy {
+        TranslateDeferringInsetsAnimationCallback2(
+            view = binding.content,
+            persistentInsetTypes = WindowInsetsCompat.Type.systemBars(),
+            deferredInsetTypes = WindowInsetsCompat.Type.ime(),
+            // We explicitly allow dispatch to continue down to binding.messageHolder's
+            // child views, so that step 2.5 below receives the call
+            dispatchMode = WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_CONTINUE_ON_SUBTREE
+        )
+    }
+
+    private val scrollListener by lazy {
+        object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                val isSoftShowing = isSoftShowing()
+                Log.i(TAG, "newState=$newState" + "isSoftShowing=$isSoftShowing")
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    if (isSoftShowing) {
+                        //软键盘隐藏
+                        translateInsetsCallback2.isBackHide = true
+                        requireActivity().currentFocus?.let {
+                            inputMethodManager.hideSoftInputFromWindow(
+                                it.windowToken,
+                                InputMethodManager.RESULT_UNCHANGED_SHOWN
+                            )
+                        }
+                    } else if (binding.content.isVisible) {
+                        //content隐藏
+                        animationTranslate(false)
+                        binding.imageView1.setImageResource(R.drawable.ic_android_gray_24dp)
+
+                    }
+
+                }
+            }
+
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                //Log.i(LOG_TAG, "dx=$dx,dy=$dy")
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        inputMethodManager =
+            requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,7 +107,89 @@ class ConversationFragment : Fragment() {
         return binding.root
     }
 
+    private fun initView() {
+        binding.imageView1.setOnClickListener {
+            val inputSoftShowing = isSoftShowing()
+            Log.i(TAG, "isSoftShowing=$inputSoftShowing")
+            if (inputSoftShowing) {
+                //隐藏软键盘
+                binding.imageView1.setImageResource(R.drawable.ic_android_blue_24dp)
+                translateInsetsCallback2.isBackHide = false
+                requireActivity().currentFocus?.let {
+                    inputMethodManager.hideSoftInputFromWindow(
+                        it.windowToken,
+                        InputMethodManager.RESULT_UNCHANGED_SHOWN
+                    )
+                }
+
+            } else {
+                //显示软键盘
+                if (binding.content.isVisible) {
+                    binding.messageEdittext.requestFocus()
+                    inputMethodManager.showSoftInput(
+                        binding.messageEdittext, InputMethodManager.SHOW_IMPLICIT
+                    )
+                    // 显示content
+                } else {
+                    showImageView()
+                }
+            }
+        }
+
+        binding.messageEdittext.setOnFocusChangeListener { _, isFocus ->
+            Log.i(TAG, "editText isFocus:$isFocus")
+            if (isFocus) {
+                translateInsetsCallback2.isBackHide = true
+                binding.imageView1.setImageResource(R.drawable.ic_android_gray_24dp)
+            }
+        }
+
+//        val observer = binding.root.viewTreeObserver
+//        observer.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener{
+//            override fun onGlobalLayout() {
+//                val inputSoftShowing = isSoftShowing()
+//                Log.i(LOG_TAG, "onGlobalLayout,isSoftShowing = $inputSoftShowing")
+//                if(inputSoftShowing){
+//                    val softHeight = getSoftHeight()
+//                    if(mHeight != softHeight){
+//                        setImageViewHeight(softHeight- 130)
+//                            mHeight = softHeight
+//                    }
+//                }
+//
+//            }
+//
+//        })
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    Log.i(TAG, "back key call back")
+                }
+
+            })
+
+        binding.conversationRecyclerview.addOnScrollListener(scrollListener)
+
+
+    }
+
+    private fun seContentViewHeight(height: Int) {
+        Log.i(TAG, "setContentViewHeight=$height")
+        val imageParams = binding.content.layoutParams
+        imageParams.height = height
+        binding.content.layoutParams = imageParams
+    }
+
+    private fun showImageView() {
+        animationTranslate(true)
+        binding.imageView1.setImageResource(R.drawable.ic_android_blue_24dp)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        //patch
+        initView()
+        //patch
         // Set our conversation adapter on the RecyclerView
         binding.conversationRecyclerview.adapter = ConversationAdapter()
 
@@ -102,6 +248,9 @@ class ConversationFragment : Fragment() {
             )
         )
 
+        //patch
+        ViewCompat.setWindowInsetsAnimationCallback(binding.content, translateInsetsCallback2)
+        //patch
         /**
          * 2.5) We also want to make sure that our EditText is focused once the IME
          * is animated in, to enable it to accept input. Similarly, if the IME is animated
@@ -141,5 +290,82 @@ class ConversationFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    //判断软键盘是否弹出
+    private fun isSoftShowing(): Boolean {
+        val screenHeight = requireActivity().window.decorView.height
+        val rect = Rect()
+        requireActivity().window.decorView.getWindowVisibleDisplayFrame(rect)
+        Log.i(TAG, "height=" + screenHeight + "bottom=" + rect.bottom)
+        // 这里可以优化
+        return screenHeight - rect.bottom > 300
+    }
+
+    private fun getSoftHeight(): Int {
+        val screenHeight = requireActivity().window.decorView.height
+        val rect = Rect()
+        requireActivity().window.decorView.getWindowVisibleDisplayFrame(rect)
+        Log.i(TAG, "height=" + screenHeight + "bottom:" + rect.bottom)
+        return screenHeight - rect.bottom
+    }
+
+    private fun animationTranslate(isMovingUp: Boolean) {
+        val imageHeight = if (binding.content.height > 100) binding.content.height else 700
+        Log.i(TAG, "imageHeight=$imageHeight,isMovingUp:$isMovingUp")
+
+        val animation = ValueAnimator().apply {
+            if (isMovingUp) {
+                setIntValues(imageHeight * (-1), 0)
+            } else {
+                setIntValues(0, imageHeight * (-1))
+            }
+            duration = 200
+        }
+        animation.addUpdateListener(object : ValueAnimator.AnimatorUpdateListener {
+            override fun onAnimationUpdate(animation: ValueAnimator) {
+                val value = animation.animatedValue as Int
+                Log.i(TAG, "value=$value")
+                val layoutParams = binding.content.layoutParams as LayoutParams
+                layoutParams.bottomMargin = value
+                binding.content.layoutParams = layoutParams
+            }
+        })
+
+
+        animation.addListener(object : Animator.AnimatorListener {
+            override fun onAnimationStart(animation: Animator) {
+                Log.i(TAG, "onAnimationStart")
+                if (isMovingUp) {
+                    val layoutParams = binding.content.layoutParams as LayoutParams
+                    layoutParams.bottomMargin = -1 * imageHeight
+                    layoutParams.height = imageHeight
+                    binding.content.layoutParams = layoutParams
+                    binding.content.visibility = View.VISIBLE
+                }
+            }
+
+            override fun onAnimationEnd(animation: Animator) {
+                Log.i(TAG, "onAnimationEnd")
+                val layoutParams = binding.content.layoutParams as LayoutParams
+                layoutParams.bottomMargin = 0
+                binding.content.layoutParams = layoutParams
+                if (!isMovingUp) {
+                    binding.content.visibility = View.GONE
+                }
+            }
+
+            override fun onAnimationCancel(animation: Animator) {
+                //Log.i(LOG_TAG, "onAnimationCancel")
+            }
+
+            override fun onAnimationRepeat(animation: Animator) {
+                //Log.i(LOG_TAG, "onAnimationRepeat")
+            }
+
+        })
+
+        animation.start()
+
     }
 }

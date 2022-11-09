@@ -16,6 +16,7 @@
 
 package com.google.android.samples.insetsanimation
 
+import android.util.Log
 import android.view.View
 import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
@@ -66,7 +67,7 @@ class RootViewDeferringInsetsCallback(
                     " same WindowInsetsCompat.Type values"
         }
     }
-
+    private val TAG = "RootViewCallback"
     private var view: View? = null
     private var lastWindowInsets: WindowInsetsCompat? = null
 
@@ -77,9 +78,9 @@ class RootViewDeferringInsetsCallback(
         windowInsets: WindowInsetsCompat
     ): WindowInsetsCompat {
         // Store the view and insets for us in onEnd() below
+        //Log.i(TAG,"onApplyWindowInsets")
         view = v
         lastWindowInsets = windowInsets
-
         val types = when {
             // When the deferred flag is enabled, we only use the systemBars() insets
             deferredInsets -> persistentInsetTypes
@@ -98,12 +99,14 @@ class RootViewDeferringInsetsCallback(
     }
 
     override fun onPrepare(animation: WindowInsetsAnimationCompat) {
+        //Log.i(TAG,"onApplyWindowInsets,type=" + animation.typeMask + ",deferredInsetTypes=" + deferredInsetTypes)
         if (animation.typeMask and deferredInsetTypes != 0) {
             // We defer the WindowInsetsCompat.Type.ime() insets if the IME is currently not visible.
             // This results in only the WindowInsetsCompat.Type.systemBars() being applied, allowing
             // the scrolling view to remain at it's larger size.
             deferredInsets = true
         }
+
     }
 
     override fun onProgress(

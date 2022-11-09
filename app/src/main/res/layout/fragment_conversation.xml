@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright 2020 The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +19,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/shape_rect"
-    android:backgroundTint="@color/color_on_surface_5"
+    android:background="@drawable/bg_recycleview"
+
     android:orientation="vertical"
     tools:context=".ConversationFragment">
 
@@ -66,33 +65,66 @@
         android:layout_height="wrap_content"
         android:background="?attr/colorSurface"
         android:elevation="@dimen/spacing_micro"
+        android:orientation="vertical"
         android:padding="@dimen/spacing_small">
 
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="0px"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/spacing_micro"
-            android:layout_weight="1">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-            <EditText
-                android:id="@+id/message_edittext"
-                android:layout_width="match_parent"
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                android:layout_width="0px"
                 android:layout_height="wrap_content"
-                android:hint="@string/message_hint" />
+                android:layout_marginEnd="@dimen/spacing_micro"
+                android:layout_weight="1">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <EditText
+                    android:id="@+id/message_edittext"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/message_hint" />
 
-        <ImageButton
-            style="@style/Widget.AppCompat.Button.Borderless.Colored"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:minWidth="48dp"
-            android:minHeight="48dp"
-            android:padding="@dimen/spacing_medium"
-            app:srcCompat="@drawable/ic_send"
-            app:tint="?attr/colorPrimary" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <ImageButton
+                style="@style/Widget.AppCompat.Button.Borderless.Colored"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                android:padding="@dimen/spacing_medium"
+                app:srcCompat="@drawable/ic_send"
+                app:tint="?attr/colorPrimary" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/imageView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:src="@drawable/ic_android_gray_24dp" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:src="@drawable/ic_android_gray_24dp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/content"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/test123"
+            android:visibility="gone" />
 
     </LinearLayout>
 

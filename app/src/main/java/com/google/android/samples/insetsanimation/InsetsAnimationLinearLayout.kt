@@ -64,13 +64,13 @@ class InsetsAnimationLinearLayout @JvmOverloads constructor(
      * Set to true to allow scrolling the IME off screen (from being visible),
      * by an downwards scroll. Defaults to `true`.
      */
-    var scrollImeOffScreenWhenVisible = true
+    var scrollImeOffScreenWhenVisible = false
 
     /**
      * Set to true to allow scrolling the IME on screen (from not being visible),
      * by an upwards scroll. Defaults to `true`.
      */
-    var scrollImeOnScreenWhenNotVisible = true
+    var scrollImeOnScreenWhenNotVisible = false
 
     override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
         // We only want to track vertical scrolls, which are driven from a direct touch event.
