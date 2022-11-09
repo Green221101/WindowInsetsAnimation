@@ -74,7 +74,7 @@ class TranslateDeferringInsetsAnimationCallback2(
         Log.i(TAG, "onStart,upperBound=" + bounds.upperBound + ",lowerBound=" + bounds.lowerBound)
         //Log.i(TAG, "millis=" + animation.durationMillis)
         Log.i(TAG, "isBackHide=$isBackHide")
-        keyBottomHeight = bounds.upperBound.bottom - bounds.lowerBound.bottom
+        keyBottomHeight = bounds.upperBound.bottom
         return super.onStart(animation, bounds)
     }
 
@@ -124,6 +124,7 @@ class TranslateDeferringInsetsAnimationCallback2(
             if (isBackHide) {
                 view.translationX = (diff.left - diff.right).toFloat()
                 view.translationY = (diff.top - diff.bottom).toFloat()
+                //Log.i(TAG,"diff=" + diff + ",translationY"+ view.translationY)
             } else {
                 if (keyHeight > 0) {
                     view.visibility = View.INVISIBLE

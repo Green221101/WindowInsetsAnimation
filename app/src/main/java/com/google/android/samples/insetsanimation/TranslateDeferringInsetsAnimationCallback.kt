@@ -75,7 +75,7 @@ class TranslateDeferringInsetsAnimationCallback(
         // to the view
         view.translationX = (diff.left - diff.right).toFloat()
         view.translationY = (diff.top - diff.bottom).toFloat()
-
+        //Log.i(TAG, "translationY=" + view.translationY + ",translationX=" + view.translationX)
         return insets
     }
 

@@ -174,7 +174,7 @@ class ConversationFragment : Fragment() {
 
     }
 
-    private fun seContentViewHeight(height: Int) {
+    private fun setContentViewHeight(height: Int) {
         Log.i(TAG, "setContentViewHeight=$height")
         val imageParams = binding.content.layoutParams
         imageParams.height = height
