@@ -59,6 +59,9 @@ class ConversationFragment : Fragment() {
         )
     }
 
+    /*
+     *  监听RecycleView touch 处理逻辑。主要是隐藏内容
+     */
     private val scrollListener by lazy {
         object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -160,7 +163,9 @@ class ConversationFragment : Fragment() {
 //            }
 //
 //        })
-
+        /*
+         * 监听返回按键
+         */
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
@@ -174,6 +179,9 @@ class ConversationFragment : Fragment() {
 
     }
 
+    /*
+     * 设置content view 高度
+     */
     private fun setContentViewHeight(height: Int) {
         Log.i(TAG, "setContentViewHeight=$height")
         val imageParams = binding.content.layoutParams
@@ -228,6 +236,9 @@ class ConversationFragment : Fragment() {
          * Note about [TranslateDeferringInsetsAnimationCallback], it relies on the behavior of
          * [RootViewDeferringInsetsCallback] on the layout's root view.
          */
+        /**
+         * 设置输入框实时监听软键盘高度变化
+         */
         ViewCompat.setWindowInsetsAnimationCallback(
             binding.messageHolder,
             TranslateDeferringInsetsAnimationCallback(
@@ -239,6 +250,10 @@ class ConversationFragment : Fragment() {
                 dispatchMode = WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_CONTINUE_ON_SUBTREE
             )
         )
+
+        /**
+         * 设置RecycleView实时监听软键盘高度变化
+         */
         ViewCompat.setWindowInsetsAnimationCallback(
             binding.conversationRecyclerview,
             TranslateDeferringInsetsAnimationCallback(
@@ -249,6 +264,9 @@ class ConversationFragment : Fragment() {
         )
 
         //patch
+        /**
+         * 输入框下内容view 监听软键盘高度变化
+         */
         ViewCompat.setWindowInsetsAnimationCallback(binding.content, translateInsetsCallback2)
         //patch
         /**
@@ -292,7 +310,11 @@ class ConversationFragment : Fragment() {
         _binding = null
     }
 
-    //判断软键盘是否弹出
+    /**
+     * 判断软键盘是否弹出
+     * 主要是通过判断decorView 和 可见window 高度 不同来判断软键盘是否显示。
+     */
+
     private fun isSoftShowing(): Boolean {
         val screenHeight = requireActivity().window.decorView.height
         val rect = Rect()
@@ -302,6 +324,9 @@ class ConversationFragment : Fragment() {
         return screenHeight - rect.bottom > 300
     }
 
+    /*
+     *  获取键盘最后高度，目前没有使用。
+     */
     private fun getSoftHeight(): Int {
         val screenHeight = requireActivity().window.decorView.height
         val rect = Rect()
@@ -310,6 +335,10 @@ class ConversationFragment : Fragment() {
         return screenHeight - rect.bottom
     }
 
+    /**
+     * 动态显示 or 隐藏 输入法下面content展示
+     * 核心逻辑就是实时设置view bottomMargin value
+     */
     private fun animationTranslate(isMovingUp: Boolean) {
         val imageHeight = if (binding.content.height > 100) binding.content.height else 700
         Log.i(TAG, "imageHeight=$imageHeight,isMovingUp:$isMovingUp")

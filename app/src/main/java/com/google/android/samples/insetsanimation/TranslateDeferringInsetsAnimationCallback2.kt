@@ -54,11 +54,11 @@ class TranslateDeferringInsetsAnimationCallback2(
      * false：其他按键退出软键盘
      */
     var isBackHide = true
-    private var tempBottom = -1
+    private var tempBottom = -1   //保存上一次软键盘高度
     private var isAnimationUp = false  // false:软键盘隐藏 true:软键盘上升
-    private var keyBottomHeight = 0
+    private var keyBottomHeight = 0  // 软键盘完成显示时候 Bottom需要的高度
     private var keyHeight = 0  //软键盘移动时候的高度
-    private var keyMaxHeight = 0
+    private var keyMaxHeight = 0  // 软键盘最高的高度，也就是完成显示时候的高度
 
     init {
         require(persistentInsetTypes and deferredInsetTypes == 0) {
@@ -89,6 +89,9 @@ class TranslateDeferringInsetsAnimationCallback2(
         // Then we get the persistent inset types which are applied as padding during layout
         val otherInset = insets.getInsets(persistentInsetTypes)
 
+        /**
+         * 通过计算这一次和上一次高度的变化 来判断此软键盘是上升还是下降
+         */
         if (tempBottom < 0) {
             tempBottom = typesInset.bottom
         } else {
@@ -113,6 +116,15 @@ class TranslateDeferringInsetsAnimationCallback2(
 
         // The resulting `diff` insets contain the values for us to apply as a translation
         // to the view
+        /**
+         * 核心逻辑
+         * 软键盘上升
+         * 1 如果view显示,先设置不可见。然后通过软键盘 最高高度-目前高度 来设置view高度。达到输入法不会跳动的效果。
+         *
+         * 软键盘下降
+         * 1.通过返回键 隐藏软键盘不用处理。直接translationY（其实现在view应该是隐藏的也可以 什么都不做）
+         * 2.通过其他按键 隐藏软键盘需要先设置view可见 然后通过软键盘 最高高度-目前高度 来设置view 高度。达到整体输入框不会跳动的问题。
+         */
         if (isAnimationUp) {
             if (!view.isGone) {
                 view.visibility = View.INVISIBLE
@@ -145,6 +157,10 @@ class TranslateDeferringInsetsAnimationCallback2(
         Log.i(TAG, "onEnd")
         view.translationX = 0f
         view.translationY = 0f
+        /**
+         * 软键盘完全显示或者隐藏 end 回调。
+         * 根据不同状态来决定是否显示view
+         */
         if (!isAnimationUp && !isBackHide) {
             view.visibility = View.VISIBLE
         } else {
